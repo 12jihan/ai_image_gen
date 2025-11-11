@@ -95,11 +95,16 @@ def main():
     rfrm.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
     txt_frm = ttk.Frame(lfrm, relief="solid", borderwidth=2)
-    test_input = tk.Text(
-        width=40, height=10, wrap="word", yscrollcommand=ttk.Scrollbar()
-    )
-    test_btn0 = ttk.Button(lfrm, text="refresh", command=button_test)
-    test_btn0.grid(row=1, column=0)
+    txt_frm.pack()
+
+    scroll = ttk.Scrollbar(txt_frm)
+    scroll.pack(side="right", fill="y")
+
+    txt = tk.Text(txt_frm, width=40, height=10, wrap="word", yscrollcommand=scroll.set)
+    txt.pack(side="left", fill="both", expand=True)
+
+    # test_btn0 = ttk.Button(lfrm, text="refresh", command=button_test)
+    # test_btn0.grid(row=1, column=0)
 
     # print(cwd)
     # print(dir_list)
