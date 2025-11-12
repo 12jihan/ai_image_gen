@@ -94,13 +94,20 @@ def main():
     rfrm = ttk.Frame(root, relief="solid", borderwidth=2)
     rfrm.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
-    txt_frm = ttk.Frame(lfrm, relief="solid", borderwidth=2)
-    txt_frm.pack()
+    chat_frm = ttk.Frame(lfrm, relief="solid", borderwidth=1)
+    chat_frm.pack(fill="both", expand=True, padx=5, pady=5)
 
-    scroll = ttk.Scrollbar(txt_frm)
-    scroll.pack(side="right", fill="y")
+    chat_scroll = ttk.Scrollbar(chat_frm)
+    chat_scroll.pack(side="right", fill="y")
 
-    txt = tk.Text(txt_frm, width=40, height=10, wrap="word", yscrollcommand=scroll.set)
+    txt_frm = ttk.Frame(lfrm, relief="solid", borderwidth=1)
+    txt_frm.pack(fill="x", expand=True, padx=5, pady=5)
+
+    scroll_txt = ttk.Scrollbar(txt_frm)
+    scroll_txt.pack(side="right", fill="y")
+    txt = tk.Text(
+        txt_frm, width=40, height=6, wrap="word", yscrollcommand=scroll_txt.set
+    )
     txt.pack(side="left", fill="both", expand=True)
 
     # test_btn0 = ttk.Button(lfrm, text="refresh", command=button_test)
