@@ -95,10 +95,10 @@ def main():
         chat_history.see(tk.END)
 
     def submit():
-        message = user_input_data.get("1.0", "end-1c").strip()
+        message = user_input.get("1.0", "end-1c").strip()
         if message:
             add_to_history(message, "user")
-            user_input_data.set("")
+            user_input.delete("1.0", tk.END)
 
     root = tk.Tk()
     root.title("Image Generator")
@@ -160,7 +160,7 @@ def main():
     user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
     user_input_frame.pack(fill="x", expand=True, padx=5, pady=5)
 
-    user_input_data = tk.StringVar()
+    # user_input_data = tk.StringVar()
     user_input = tk.Text(user_input_frame, height=3, font=ai_font, wrap="word")
     user_input.grid(row=0, column=0, padx=(0, 5))
 
