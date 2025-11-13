@@ -1,5 +1,6 @@
+from logging import disable
 import os
-from tkinter import Event, Listbox, StringVar, messagebox, ttk
+from tkinter import BOTH, EW, LEFT, Event, Listbox, StringVar, messagebox, ttk
 from tkinter.font import Font
 from typing import ValuesView, cast
 
@@ -23,6 +24,8 @@ def main():
     api_key: str | None = os.getenv("API_KEY")
 
     current: str | None = None
+
+    # Functions:
 
     def generateImage():
         try:
@@ -82,7 +85,20 @@ def main():
 
     def button_test():
         print("clicked")
-        # generateImage()
+
+    def add_to_history(message: str, tag: str):
+        chat_history.config(state="normal")
+        print(f"Adding to history:: {tag}: {message}")
+
+        chat_history.insert(tk.END, message + "\n\n", tag)
+        chat_history.config(state="disabled")
+        chat_history.see(tk.END)
+
+    def submit():
+        message = user_input_data.get().strip()
+        if message:
+            add_to_history(message, "user")
+            user_input_data.set("")
 
     root = tk.Tk()
     root.title("Image Generator")
@@ -94,40 +110,73 @@ def main():
     rfrm = ttk.Frame(root, relief="solid", borderwidth=2)
     rfrm.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
-    chat_frm = ttk.Frame(lfrm, relief="solid", borderwidth=1)
-    chat_frm.pack(fill="both", expand=True, padx=5, pady=5)
+    chat_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
+    chat_frame.pack(fill="both", expand=True, padx=5, pady=5)
 
-    chat_scroll = ttk.Scrollbar(chat_frm)
+    chat_scroll = ttk.Scrollbar(chat_frame)
     chat_scroll.pack(side="right", fill="y")
 
-    txt_frm = ttk.Frame(lfrm, relief="solid", borderwidth=1)
-    txt_frm.pack(fill="x", expand=True, padx=5, pady=5)
-
-    scroll_txt = ttk.Scrollbar(txt_frm)
-    scroll_txt.pack(side="right", fill="y")
-    txt = tk.Text(
-        txt_frm, width=40, height=6, wrap="word", yscrollcommand=scroll_txt.set
+    chat_history = tk.Text(
+        chat_frame,
+        wrap="word",
+        state="disabled",
+        yscrollcommand=chat_scroll.set,
+        padx=5,
+        pady=5,
     )
-    txt.pack(side="left", fill="both", expand=True)
+    chat_history.pack(side="left", fill="both", expand=True)
 
-    # test_btn0 = ttk.Button(lfrm, text="refresh", command=button_test)
-    # test_btn0.grid(row=1, column=0)
+    chat_scroll.config(command=chat_history.yview)
 
-    # print(cwd)
-    # print(dir_list)
-    choices = tk.Variable(value=dir_list)
-    # if dir_list:
-    lb = tk.Listbox(rfrm, listvariable=choices)
-    lb.bind("<<ListboxSelect>>", test)
-    # lb.selection_set
-    lb.pack()
+    # Create a "tag" for user messages (blue, bold)
+    chat_history.tag_configure(
+        "user",
+        foreground="white",
+        background="#007AFF",
+        justify="right",
+        lmargin1=15,
+        rmargin=15,
+        spacing1=5,
+        borderwidth=2,
+        font=("Helvetica", 25, "bold"),
+    )
+    chat_history.tag_configure(
+        "ai",
+        background="#AAAAAA",
+        font=("Helvetica", 25, "bold"),
+        lmargin1=15,
+        rmargin=15,
+        spacing1=10,
+    )
 
-    # print("works")
+    # Create User Input Frame
+    user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
+    user_input_frame.pack(fill="x", expand=True, padx=5, pady=5)
+
+    user_input_data = tk.StringVar()
+    user_input = tk.Entry(
+        user_input_frame, textvariable=user_input_data, font=("Helvetica", 20)
+    )
+    user_input.grid(row=0, column=0, padx=(5, 5))
+
+    user_input_submit = ttk.Button(user_input_frame, text="Send")
+    user_input_submit.grid(row=0, column=1, sticky=EW)
+
+    img_listbox_choices = tk.Variable(value=dir_list)
+    img_listbox = tk.Listbox(rfrm, listvariable=img_listbox_choices)
+    img_listbox.bind("<<ListboxSelect>>", test)
+    img_listbox.pack()
+
+    # Bindings:
+    user_input_submit.config(command=submit)
+    user_input.bind("<Return>", lambda event: submit())
 
     # test_image = ImageTk.PhotoImage(img)
     # img_label = tk.Label(root, image=test_image)
     # img_label.pack()
 
+    # Add a welcome message
+    add_to_history("Hello! I am a helpful AI. Ask me anything.", "ai")
     root.mainloop()
 
 
