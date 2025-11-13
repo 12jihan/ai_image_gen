@@ -1,6 +1,6 @@
 from logging import disable
 import os
-from tkinter import BOTH, EW, LEFT, Event, Listbox, StringVar, messagebox, ttk
+from tkinter import BOTH, EW, LEFT, Event, Listbox, StringVar, messagebox, ttk, font
 from tkinter.font import Font
 from typing import ValuesView, cast
 
@@ -95,7 +95,7 @@ def main():
         chat_history.see(tk.END)
 
     def submit():
-        message = user_input_data.get().strip()
+        message = user_input_data.get("1.0", "end-1c").strip()
         if message:
             add_to_history(message, "user")
             user_input_data.set("")
@@ -118,35 +118,42 @@ def main():
 
     chat_history = tk.Text(
         chat_frame,
+        height=20,
         wrap="word",
         state="disabled",
         yscrollcommand=chat_scroll.set,
-        padx=5,
-        pady=5,
+        # padx=5,
+        # pady=5,
     )
     chat_history.pack(side="left", fill="both", expand=True)
 
     chat_scroll.config(command=chat_history.yview)
+
+    user_font = font.Font(family="Helvetica", size=15, weight="bold")
+    ai_font = font.Font(family="Helvetica", size=15)
 
     # Create a "tag" for user messages (blue, bold)
     chat_history.tag_configure(
         "user",
         foreground="white",
         background="#007AFF",
+        font=user_font,
         justify="right",
         lmargin1=15,
         rmargin=15,
         spacing1=5,
         borderwidth=2,
-        font=("Helvetica", 25, "bold"),
+        relief="solid",
     )
     chat_history.tag_configure(
         "ai",
         background="#AAAAAA",
-        font=("Helvetica", 25, "bold"),
+        font=ai_font,
         lmargin1=15,
         rmargin=15,
         spacing1=10,
+        borderwidth=2,
+        relief="solid",
     )
 
     # Create User Input Frame
@@ -154,10 +161,8 @@ def main():
     user_input_frame.pack(fill="x", expand=True, padx=5, pady=5)
 
     user_input_data = tk.StringVar()
-    user_input = tk.Entry(
-        user_input_frame, textvariable=user_input_data, font=("Helvetica", 20)
-    )
-    user_input.grid(row=0, column=0, padx=(5, 5))
+    user_input = tk.Text(user_input_frame, height=3, font=ai_font, wrap="word")
+    user_input.grid(row=0, column=0, padx=(0, 5))
 
     user_input_submit = ttk.Button(user_input_frame, text="Send")
     user_input_submit.grid(row=0, column=1, sticky=EW)
