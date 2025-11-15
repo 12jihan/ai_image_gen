@@ -111,12 +111,48 @@ def main():
             generateImage(message, chat_history_context)
             user_input.delete("1.0", tk.END)
 
+    def on_frame_resize(event):
+        # This event fires when 'rfrm' is resized
+
+        # Get the frame's new size (minus a little padding)
+        new_width = event.width - 10
+        new_height = event.height - 10
+
+        # --- Calculate new size, maintaining aspect ratio ---
+        img_w, img_h = pil_img.size
+        ratio = min(new_width / img_w, new_height / img_h)
+
+        # Don't scale up, only down
+        if ratio >= 1.0:
+            # Image is smaller than frame, just use original
+            new_size = (img_w, img_h)
+        else:
+            # Image is larger, scale it down
+            new_size = (int(img_w * ratio), int(img_h * ratio))
+
+        # --- Prevent errors on minimize ---
+        if new_size[0] < 1 or new_size[1] < 1:
+            return  # Don't try to resize to 0
+
+        # --- Create the new, resized image ---
+        # 1. Resize the *original* PIL image
+        resized_pil_img = pil_img.resize(new_size, Image.Resampling.LANCZOS)
+
+        # 2. Create a new PhotoImage
+        new_tk_img = ImageTk.PhotoImage(resized_pil_img)
+
+        # 3. Update the label's image
+        img_label.config(image=new_tk_img)
+
+        # 4. CRITICAL: Anchor the new image to the label
+        img_label.image = new_tk_img  # type: ignore
+
     root = tk.Tk()
     root.title("Image Generator")
     root.geometry("800x400")
 
     lfrm = ttk.Frame(root, relief="solid", borderwidth=2)
-    lfrm.pack(side="left", fill="both", expand=True, padx=5, pady=5)
+    lfrm.pack(side="left", fill="both", expand=False, padx=5, pady=5)
 
     rfrm = ttk.Frame(root, relief="solid", borderwidth=2)
     rfrm.pack(side="right", fill="both", expand=True, padx=5, pady=5)
@@ -138,7 +174,7 @@ def main():
     tk_img = ImageTk.PhotoImage(pil_img)
     img_label = tk.Label(rfrm, image=tk_img)
     # img_label.image = tk_img
-    img_label.pack(padx=5, pady=5)
+    img_label.pack(side="bottom", padx=5, pady=5)
 
     chat_history = tk.Text(
         chat_frame,
@@ -194,6 +230,7 @@ def main():
     # Bindings:
     user_input_submit.config(command=submit)
     user_input.bind("<Return>", lambda event: submit())
+    rfrm.bind("<Configure>", on_frame_resize)
 
     # test_image = ImageTk.PhotoImage(img)
     # img_label = tk.Label(rfrm, image=test_image)
