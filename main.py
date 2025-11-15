@@ -8,6 +8,7 @@ from google.genai import Client
 from google.genai.types import GenerateContentConfig, Modality
 from PIL import Image, ImageTk
 import tkinter as tk
+import uuid
 
 from dotenv import load_dotenv
 
@@ -22,46 +23,49 @@ def main():
     cwd: str = os.getcwd()
     dir_list: list[str] = os.listdir("./imgs")
     api_key: str | None = os.getenv("API_KEY")
-
+    chat_history_context: list = []
     current: str | None = None
+    img = "./imgs/sample_image.png"
 
     # Functions:
-
-    def generateImage():
+    def generateImage(message: str, history_list: list):
+        prompt: str = message
+        contents = history_list
+        print(f"contents: {contents}")
         try:
-            client = Client(api_key=api_key)
-
-            prompt = "Create a sample image for me"
+            client: Client = Client(api_key=api_key)
             response = client.models.generate_content(
                 model="gemini-2.0-flash-preview-image-generation",
-                contents=prompt,
+                contents=str(contents),
                 config=GenerateContentConfig(
                     response_modalities=[Modality.IMAGE, Modality.TEXT]
                 ),
             )
-            print("Creating test image...")
-
+            print("Creating image...")
+            print(response)
             if response.parts:
-                text_part = response.parts[0]
-                image_part = response.parts[1]
-                pil_image = image_part.as_image()
-
-                if text_part:
+                print(len(response.parts))
+                if len(response.parts) > 0:
+                    text_part = response.parts[0].text
+                    print(f"ai text: {text_part}")
                     print(text_part)
-                if pil_image:
-                    output_name = "sample_image.png"
-                    pil_image.save(output_name)
-                else:
-                    print("Can't convert to an image...")
+                    add_to_history(str(text_part), "ai")
+                if len(response.parts) > 1:
+                    image_part = response.parts[1]
+                    pil_image = image_part.as_image()
+                    image_id = str(uuid.uuid4())
+                    output_name = image_id + "-gemini-img" + ".png"
+                    if pil_image:
+                        pil_image.save(f"imgs/{output_name}")
 
                 # print(f"response: {response}")
 
         except Exception as e:
             print(f"Error: {e}")
 
-    def openImage():
+    def openImage(filename: str):
         try:
-            img = Image.open("imgs/sample_image.png")
+            img = Image.open("imgs/" + filename)
         except FileNotFoundError as e:
             print(f"There was an error: {e}")
             # root.destroy()
@@ -89,8 +93,11 @@ def main():
     def add_to_history(message: str, tag: str):
         chat_history.config(state="normal")
         print(f"Adding to history:: {tag}: {message}")
+        contents = {"role": tag, "parts": [message]}
 
+        chat_history_context.append(contents)
         chat_history.insert(tk.END, message + "\n\n", tag)
+
         chat_history.config(state="disabled")
         chat_history.see(tk.END)
 
@@ -98,6 +105,7 @@ def main():
         message = user_input.get("1.0", "end-1c").strip()
         if message:
             add_to_history(message, "user")
+            generateImage(message, chat_history_context)
             user_input.delete("1.0", tk.END)
 
     root = tk.Tk()
@@ -176,9 +184,9 @@ def main():
     user_input_submit.config(command=submit)
     user_input.bind("<Return>", lambda event: submit())
 
-    # test_image = ImageTk.PhotoImage(img)
-    # img_label = tk.Label(root, image=test_image)
-    # img_label.pack()
+    test_image = ImageTk.PhotoImage(img)
+    img_label = tk.Label(rfrm, image=test_image)
+    img_label.pack()
 
     # Add a welcome message
     add_to_history("Hello! I am a helpful AI. Ask me anything.", "ai")
