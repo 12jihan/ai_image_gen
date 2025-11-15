@@ -5,7 +5,7 @@ from tkinter.font import Font
 from typing import ValuesView, cast
 
 from google.genai import Client
-from google.genai.types import GenerateContentConfig, Modality
+from google.genai.types import GenerateContentConfig, ListModelsConfig, Modality
 from PIL import Image, ImageTk
 import tkinter as tk
 import uuid
@@ -26,6 +26,9 @@ def main():
     chat_history_context: list = []
     current: str | None = None
     img = "./imgs/sample_image.png"
+    client: Client = Client(api_key=api_key)
+    models = client.models.list()
+    print(list(models))
 
     # Functions:
     def generateImage(message: str, history_list: list):
@@ -33,9 +36,8 @@ def main():
         contents = history_list
         print(f"contents: {contents}")
         try:
-            client: Client = Client(api_key=api_key)
             response = client.models.generate_content(
-                model="gemini-2.0-flash-preview-image-generation",
+                model="gemini-2.5-flash-image",
                 contents=str(contents),
                 config=GenerateContentConfig(
                     response_modalities=[Modality.IMAGE, Modality.TEXT]
@@ -184,9 +186,9 @@ def main():
     user_input_submit.config(command=submit)
     user_input.bind("<Return>", lambda event: submit())
 
-    test_image = ImageTk.PhotoImage(img)
-    img_label = tk.Label(rfrm, image=test_image)
-    img_label.pack()
+    # test_image = ImageTk.PhotoImage(img)
+    # img_label = tk.Label(rfrm, image=test_image)
+    # img_label.pack()
 
     # Add a welcome message
     add_to_history("Hello! I am a helpful AI. Ask me anything.", "ai")
