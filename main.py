@@ -27,14 +27,14 @@ def main():
     current: str | None = None
     img = "./imgs/sample_image.png"
     client: Client = Client(api_key=api_key)
-    models = client.models.list()
-    print(list(models))
+    # models = client.models.list()
+    # print(list(models))
 
     # Functions:
     def generateImage(message: str, history_list: list):
         prompt: str = message
         contents = history_list
-        print(f"contents: {contents}")
+        # print(f"contents: {contents}")
         try:
             response = client.models.generate_content(
                 model="gemini-2.5-flash-image",
@@ -63,7 +63,8 @@ def main():
                 # print(f"response: {response}")
 
         except Exception as e:
-            print(f"Error: {e}")
+            # print(f"Errorsdasd: {dir(e)}")
+            print(f"Errorsdasd: {e}")
 
     def openImage(filename: str):
         try:
@@ -126,6 +127,19 @@ def main():
     chat_scroll = ttk.Scrollbar(chat_frame)
     chat_scroll.pack(side="right", fill="y")
 
+    img_listbox_choices = tk.Variable(value=dir_list)
+    img_listbox = tk.Listbox(rfrm, listvariable=img_listbox_choices)
+    img_listbox.bind("<<ListboxSelect>>", test)
+    img_listbox.pack()
+    # image_frame = ttk.Frame(rfrm, relief="solid", borderwidth=1)
+    # image_frame.pack()
+    pil_img = Image.open("./imgs/sample_image.png")
+
+    tk_img = ImageTk.PhotoImage(pil_img)
+    img_label = tk.Label(rfrm, image=tk_img)
+    # img_label.image = tk_img
+    img_label.pack(padx=5, pady=5)
+
     chat_history = tk.Text(
         chat_frame,
         height=20,
@@ -176,11 +190,6 @@ def main():
 
     user_input_submit = ttk.Button(user_input_frame, text="Send")
     user_input_submit.grid(row=0, column=1, sticky=EW)
-
-    img_listbox_choices = tk.Variable(value=dir_list)
-    img_listbox = tk.Listbox(rfrm, listvariable=img_listbox_choices)
-    img_listbox.bind("<<ListboxSelect>>", test)
-    img_listbox.pack()
 
     # Bindings:
     user_input_submit.config(command=submit)
