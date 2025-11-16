@@ -1,5 +1,6 @@
 from logging import disable
 import os
+from io import BytesIO
 from tkinter import (
     BOTH,
     EW,
@@ -16,7 +17,12 @@ from tkinter.font import Font
 from typing import ValuesView, cast
 
 from google.genai import Client
-from google.genai.types import GenerateContentConfig, ListModelsConfig, Modality
+from google.genai.types import (
+    GenerateContentConfig,
+    ListModelsConfig,
+    Modality,
+    SafetySetting,
+)
 from PIL import Image, ImageTk
 import tkinter as tk
 import uuid
@@ -42,39 +48,26 @@ def main():
     def generateImage(message: str, history_list: list):
         prompt: str = message
         contents = history_list
-        # print(f"contents: {contents}")
+
         try:
             response = client.models.generate_content(
-                model="gemini-2.5-flash-image",
-                contents=str(contents),
+                model="gemini-2.5-flash",
+                contents=contents,
                 config=GenerateContentConfig(
-                    response_modalities=[Modality.IMAGE, Modality.TEXT]
+                    response_modalities=[Modality.TEXT],
+                    candidate_count=1,
                 ),
             )
-
-            print("Creating image...")
-            print(response)
-
             if response.parts:
-                print(len(response.parts))
-                if len(response.parts) > 0:
-                    text_part = response.parts[0].text
-                    print(f"ai text: {text_part}")
-                    print(text_part)
-                    add_to_history(str(text_part), "ai")
-                if len(response.parts) > 1:
-                    image_part = response.parts[1]
-                    pil_image = image_part.as_image()
-                    image_id = str(uuid.uuid4())
-                    output_name = image_id + "-gemini-img" + ".png"
-                    if pil_image:
-                        pil_image.save(f"imgs/{output_name}")
+                print(response.parts[0].text)
+                text_part = response.parts[0]
 
-                # print(f"response: {response}")
+                if text_part.text:
+                    add_to_history(text_part.text, "model")
 
         except Exception as e:
-            # print(f"Errorsdasd: {dir(e)}")
-            print(f"Errorsdasd: {e}")
+            print(f"Errors: {e}")
+            add_to_history(str(e), "model")
 
     def openImage(filename: str):
         try:
@@ -128,9 +121,10 @@ def main():
     def add_to_history(message: str, tag: str):
         chat_history.config(state="normal")
         print(f"Adding to history:: {tag}: {message}")
-        contents = {"role": tag, "parts": [message]}
+        contents = {"role": tag, "parts": [{"text": message}]}
 
         chat_history_context.append(contents)
+        print(chat_history_context)
         chat_history.insert(tk.END, message + "\n\n", tag)
 
         chat_history.config(state="disabled")
@@ -220,8 +214,8 @@ def main():
 
     chat_scroll.config(command=chat_history.yview)
 
-    user_font = font.Font(family="Helvetica", size=15, weight="bold")
-    ai_font = font.Font(family="Helvetica", size=15)
+    user_font = font.Font(family="Helvetica", size=18, weight="bold")
+    ai_font = font.Font(family="Helvetica", size=18, weight="bold")
 
     # Create a "tag" for user messages (blue, bold)
     chat_history.tag_configure(
@@ -237,8 +231,8 @@ def main():
         relief="solid",
     )
     chat_history.tag_configure(
-        "ai",
-        background="#AAAAAA",
+        "model",
+        background="#444",
         font=ai_font,
         lmargin1=15,
         rmargin=15,
@@ -269,7 +263,7 @@ def main():
     # img_label.pack()
 
     # Add a welcome message
-    add_to_history("Hello! I am a helpful AI. Ask me anything.", "ai")
+    add_to_history("Hello! I am a helpful AI. Ask me anything.", "model")
     root.mainloop()
 
 
