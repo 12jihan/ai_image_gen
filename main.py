@@ -1,6 +1,17 @@
 from logging import disable
 import os
-from tkinter import BOTH, EW, LEFT, Event, Listbox, StringVar, messagebox, ttk, font
+from tkinter import (
+    BOTH,
+    EW,
+    LEFT,
+    Event,
+    Listbox,
+    Misc,
+    StringVar,
+    messagebox,
+    ttk,
+    font,
+)
 from tkinter.font import Font
 from typing import ValuesView, cast
 
@@ -27,10 +38,7 @@ def main():
     current: str | None = None
     img = "./imgs/sample_image.png"
     client: Client = Client(api_key=api_key)
-    # models = client.models.list()
-    # print(list(models))
 
-    # Functions:
     def generateImage(message: str, history_list: list):
         prompt: str = message
         contents = history_list
@@ -43,8 +51,10 @@ def main():
                     response_modalities=[Modality.IMAGE, Modality.TEXT]
                 ),
             )
+
             print("Creating image...")
             print(response)
+
             if response.parts:
                 print(len(response.parts))
                 if len(response.parts) > 0:
@@ -78,15 +88,35 @@ def main():
         """
         Calls an external Python script when an item is selected.
         """
+        nonlocal cur_pil_img
+
         listbox = cast(tk.Listbox, e.widget)
         selected_indices = listbox.curselection()
 
         if selected_indices:
             index = selected_indices[0]
             value = listbox.get(index)
-            new_pil_img = Image.open(f"./imgs/{value}")
-            img_label = pil_img
-            print(f"value: {value}")
+
+            try:
+                new_pil_img = Image.open(f"./imgs/{value}")
+                cur_pil_img = new_pil_img
+
+                # new_img = ImageTk.PhotoImage(new_pil_img)
+                # img_label.config(image=new_img)
+                # img_label.image = new_img  # type: ignore
+                #
+                # print(f"value: {value}")
+                frame_width = rfrm.winfo_width()
+                frame_height = rfrm.winfo_height()
+
+                class FakeEvent:
+                    def __init__(self, w, h):
+                        self.width = w
+                        self.height = h
+
+                on_frame_resize(FakeEvent(frame_width, frame_height))
+            except Exception as ex:
+                print(f"Error: {ex}")
 
         # selected_indices = lb.curselection()
         # print(f"this worked\n{dir(e)}")
@@ -121,7 +151,7 @@ def main():
         new_height = event.height - 10
 
         # --- Calculate new size, maintaining aspect ratio ---
-        img_w, img_h = pil_img.size
+        img_w, img_h = cur_pil_img.size
         ratio = min(new_width / img_w, new_height / img_h)
 
         # Don't scale up, only down
@@ -138,7 +168,7 @@ def main():
 
         # --- Create the new, resized image ---
         # 1. Resize the *original* PIL image
-        resized_pil_img = pil_img.resize(new_size, Image.Resampling.LANCZOS)
+        resized_pil_img = cur_pil_img.resize(new_size, Image.Resampling.LANCZOS)
 
         # 2. Create a new PhotoImage
         new_tk_img = ImageTk.PhotoImage(resized_pil_img)
@@ -151,7 +181,7 @@ def main():
 
     root = tk.Tk()
     root.title("Image Generator")
-    root.geometry("800x400")
+    root.geometry("1200x700")
 
     lfrm = ttk.Frame(root, relief="solid", borderwidth=2)
     lfrm.pack(side="left", fill="both", expand=False, padx=5, pady=5)
@@ -171,7 +201,7 @@ def main():
     # image_frame = ttk.Frame(rfrm, relief="solid", borderwidth=1)
     # image_frame.pack()
     pil_img = Image.open("./imgs/sample_image.png")
-
+    cur_pil_img = pil_img
     tk_img = ImageTk.PhotoImage(pil_img)
     img_label = tk.Label(rfrm, image=tk_img)
     # img_label.image = tk_img
@@ -186,7 +216,7 @@ def main():
         # padx=5,
         # pady=5,
     )
-    chat_history.pack(side="left", fill="both", expand=True)
+    chat_history.pack(side="bottom", fill="both", expand=True)
 
     chat_scroll.config(command=chat_history.yview)
 
