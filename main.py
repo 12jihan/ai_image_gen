@@ -74,7 +74,7 @@ def main():
             # root.destroy()
             return
 
-    def test(e: tk.Event):
+    def reload_img(e: tk.Event):
         """
         Calls an external Python script when an item is selected.
         """
@@ -84,6 +84,8 @@ def main():
         if selected_indices:
             index = selected_indices[0]
             value = listbox.get(index)
+            new_pil_img = Image.open(f"./imgs/{value}")
+            img_label = pil_img
             print(f"value: {value}")
 
         # selected_indices = lb.curselection()
@@ -165,8 +167,7 @@ def main():
 
     img_listbox_choices = tk.Variable(value=dir_list)
     img_listbox = tk.Listbox(rfrm, listvariable=img_listbox_choices)
-    img_listbox.bind("<<ListboxSelect>>", test)
-    img_listbox.pack()
+    img_listbox.pack(side="top", fill="both")
     # image_frame = ttk.Frame(rfrm, relief="solid", borderwidth=1)
     # image_frame.pack()
     pil_img = Image.open("./imgs/sample_image.png")
@@ -229,6 +230,7 @@ def main():
 
     # Bindings:
     user_input_submit.config(command=submit)
+    img_listbox.bind("<<ListboxSelect>>", reload_img)
     user_input.bind("<Return>", lambda event: submit())
     rfrm.bind("<Configure>", on_frame_resize)
 
