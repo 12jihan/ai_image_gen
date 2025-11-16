@@ -183,15 +183,15 @@ def main():
     rfrm = ttk.Frame(root, relief="solid", borderwidth=2)
     rfrm.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
-    chat_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
-    chat_frame.pack(fill="both", expand=True, padx=5, pady=5)
+    chat_frame = ttk.Frame(lfrm, relief="solid")
+    chat_frame.pack(side="top", fill="both", expand=True, padx=5, pady=5)
 
     chat_scroll = ttk.Scrollbar(chat_frame)
     chat_scroll.pack(side="right", fill="y")
 
     img_listbox_choices = tk.Variable(value=dir_list)
     img_listbox = tk.Listbox(rfrm, listvariable=img_listbox_choices)
-    img_listbox.pack(side="top", fill="both")
+    img_listbox.pack(side="top", fill="both", expand=True)
     # image_frame = ttk.Frame(rfrm, relief="solid", borderwidth=1)
     # image_frame.pack()
     pil_img = Image.open("./imgs/sample_image.png")
@@ -200,6 +200,9 @@ def main():
     img_label = tk.Label(rfrm, image=tk_img)
     # img_label.image = tk_img
     img_label.pack(side="bottom", padx=5, pady=5)
+
+    user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
+    user_input_frame.pack(side="bottom", fill="x", padx=5, pady=5)
 
     chat_history = tk.Text(
         chat_frame,
@@ -242,15 +245,13 @@ def main():
     )
 
     # Create User Input Frame
-    user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
-    user_input_frame.pack(fill="x", expand=True, padx=5, pady=5)
+    # user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
 
-    # user_input_data = tk.StringVar()
     user_input = tk.Text(user_input_frame, height=3, font=ai_font, wrap="word")
-    user_input.grid(row=0, column=0, padx=(0, 5))
+    user_input.pack(side="left", fill="y")
 
     user_input_submit = ttk.Button(user_input_frame, text="Send")
-    user_input_submit.grid(row=0, column=1, sticky=EW)
+    user_input_submit.pack(side="right", fill="y")
 
     # Bindings:
     user_input_submit.config(command=submit)
