@@ -9,3 +9,7 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+# imgs folder
+imgs/*
+!imgs/sample_image.png
