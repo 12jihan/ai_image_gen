@@ -14,13 +14,15 @@ from tkinter import (
     font,
 )
 from tkinter.font import Font
-from typing import ValuesView, cast
+from typing import List, Literal, ValuesView, cast
 
 from google.genai import Client
 from google.genai.types import (
     GenerateContentConfig,
+    GenerateImagesConfig,
     ListModelsConfig,
     Modality,
+    Part,
     SafetySetting,
 )
 from PIL import Image, ImageTk
@@ -44,23 +46,46 @@ def main():
     current: str | None = None
     img = "./imgs/sample_image.png"
     client: Client = Client(api_key=api_key)
+    models = list(client.models.list())
 
-    def generateImage(message: str, history_list: list):
+    print(f"Total models: {len(models)}\n")
+    print("Available models:")
+    for model in models:
+        print(f"- {model.name}")
+
+    def generate_content(message: str, history_list: list):
         prompt: str = message
         contents = history_list
+        print(f"CheckBox State: {check_box_state.get()}")
+        generate_img = check_box_state.get()
 
         try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=contents,
-                config=GenerateContentConfig(
-                    response_modalities=[Modality.TEXT],
-                    candidate_count=1,
-                ),
-            )
-            if response.parts:
-                print(response.parts[0].text)
-                text_part = response.parts[0]
+            response = None
+            if not generate_img:
+                print("Text generation model!!")
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=contents,
+                    config=GenerateContentConfig(
+                        response_modalities=[Modality.TEXT],
+                    ),
+                )
+            else:
+                print("Image generation model!!")
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash-image",
+                    contents=contents,
+                    config=GenerateContentConfig(
+                        response_modalities=[Modality.TEXT, Modality.IMAGE],
+                    ),
+                )
+                print(f"response: {response.parts}")
+
+            if response and response.parts:
+                text_part: Part = response.parts[0]
+                print(f"response: {response.candidates}")
+                # img_part =
+                # print(f"img: {img_part}")
 
                 if text_part.text:
                     add_to_history(text_part.text, "model")
@@ -134,7 +159,7 @@ def main():
         message = user_input.get("1.0", "end-1c").strip()
         if message:
             add_to_history(message, "user")
-            generateImage(message, chat_history_context)
+            generate_content(message, chat_history_context)
             user_input.delete("1.0", tk.END)
 
     def on_frame_resize(event):
@@ -189,6 +214,12 @@ def main():
     chat_scroll = ttk.Scrollbar(chat_frame)
     chat_scroll.pack(side="right", fill="y")
 
+    user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
+    user_input_frame.pack(fill="x", padx=5, pady=5)
+
+    bottom_frame = tk.Frame(lfrm, relief="solid", borderwidth=1)
+    bottom_frame.pack(side="right", padx=5, pady=5)
+
     img_listbox_choices = tk.Variable(value=dir_list)
     img_listbox = tk.Listbox(rfrm, listvariable=img_listbox_choices)
     img_listbox.pack(side="top", fill="both", expand=True)
@@ -200,9 +231,6 @@ def main():
     img_label = tk.Label(rfrm, image=tk_img)
     # img_label.image = tk_img
     img_label.pack(side="bottom", padx=5, pady=5)
-
-    user_input_frame = ttk.Frame(lfrm, relief="solid", borderwidth=1)
-    user_input_frame.pack(side="bottom", fill="x", padx=5, pady=5)
 
     chat_history = tk.Text(
         chat_frame,
@@ -230,7 +258,7 @@ def main():
         lmargin1=15,
         rmargin=15,
         spacing1=5,
-        borderwidth=2,
+        borderwidth=1,
         relief="solid",
     )
     chat_history.tag_configure(
@@ -240,7 +268,7 @@ def main():
         lmargin1=15,
         rmargin=15,
         spacing1=10,
-        borderwidth=2,
+        borderwidth=1,
         relief="solid",
     )
 
@@ -252,6 +280,13 @@ def main():
 
     user_input_submit = ttk.Button(user_input_frame, text="Send")
     user_input_submit.pack(side="right", fill="y")
+
+    # Bottom Frame
+    check_box_state = tk.BooleanVar()
+    check_box = tk.Checkbutton(
+        bottom_frame, text="Image Generation", variable=check_box_state
+    )
+    check_box.pack()
 
     # Bindings:
     user_input_submit.config(command=submit)
